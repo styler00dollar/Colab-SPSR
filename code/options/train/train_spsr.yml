@@ -1,0 +1,124 @@
+name: 'SPSR'
+use_tb_logger: true
+model: 'spsr'
+scale: 4
+gpu_ids: [0,1]
+
+datasets:
+  train:
+    name: 'DIV2K'
+    mode: 'LRHROTF'
+    dataroot_HR: '/mnt/4/jzy/dataset/SR_dataset/DIV2K800/DIV2K800_HR.lmdb'
+    dataroot_LR: '/mnt/4/jzy/dataset/SR_dataset/DIV2K800/DIV2K800.lmdb'
+    subset_file: null
+    use_shuffle: true
+    n_workers: 4 # 0 to disable CPU multithreading, or an integrer representing CPU threads to use for dataloading
+    batch_size: 4
+    HR_size: 128 # patch size. Default: 128
+
+    #Color space conversion: 'color' for both LR and HR, 'color_LR' for LR independently, 'color_HR' for HR independently
+    #color: 'y' # remove for no conversion (RGB) | 'y' for Y in YCbCr | 'gray' to convert RGB to grayscale | 'RGB' to convert gray to RGB
+    #color_LR: 'y' # remove for no conversion (RGB) | 'y' for Y in YCbCr | 'gray' to convert RGB to grayscale | 'RGB' to convert gray to RGB
+    #color_HR: 'y' # remove for no conversion (RGB) | 'y' for Y in YCbCr | 'gray' to convert RGB to grayscale | 'RGB' to convert gray to RGB
+
+    #LR and HR modifiers. Random flip LR and HR or ignore provided LRs and generate new ones on the fly with defined probability:
+    #rand_flip_LR_HR: false # true # flip LR and HR during training.
+    #flip_chance: 0.05 # Example: 0.05 = 5% chance of LR and HR flipping during training.
+    #aug_downscale: 0.2 # Example: 0.6 = 60% chance of generating LR on the fly, even if LR dataset exists
+
+    #If manually configuring on the fly generation of LR: (else, it will automatically default to Matlab-like downscale algorithm (777) when/if required
+    lr_downscale: true # false
+    lr_downscale_types: ['linear', 'cubic', 'matlab_bicubic'] # select from: ['nearest', 'linear', 'cubic', 'area', 'lanczos4', 'linear_exact', 'matlab_bicubic'] # scale_algos #scaling interpolation options
+
+    #Rotations augmentations:
+    use_flip: true # flip images
+    use_rot: true # rotate images in 90 degree angles
+    hr_rrot: false # rotate images in random degress between -45 and 45
+
+    #Noise and blur augmentations:
+    lr_blur: false # true | false
+    lr_blur_types:  ['gaussian', 'clean', 'clean', 'clean'] # select from: ['average', 'box', 'gaussian', 'bilateral', 'clean'] # #blur options #median and motion aren't working yet
+    lr_noise: false # true | false
+    lr_noise_types: ['gaussian', 'clean', 'clean', 'clean', 'clean'] # select from: ['gaussian', 'JPEG', 'quantize', 'poisson', 'dither', 's&p', 'speckle', 'clean']
+    lr_noise2: false # true | false
+    lr_noise_types2: ['dither', 'dither', 'clean', 'clean'] # select from: ['gaussian', 'JPEG', 'quantize', 'poisson', 'dither', 's&p', 'speckle', 'clean']
+    hr_noise: false # true | false
+    hr_noise_types: ['gaussian', 'clean', 'clean', 'clean', 'clean'] # select from: ['gaussian', 'JPEG', 'quantize', 'poisson', 'dither', 's&p', 'speckle', 'clean']
+
+    #Color augmentations
+    #lr_fringes: true # true | false
+    #lr_fringes_chance: 0.4
+    #auto_levels: 'HR' # 'HR' | 'LR' | 'Both' # add auto levels to the images to expand dynamic range. Can use with (MS)-SSIM.
+    #rand_auto_levels: 0.7 # Example: 0.4 = 40% chance of adding auto levels to images on the fly
+    #hr_unsharp_mask: true # add a unsharpening mask to HR images. Can work well together with the HFEN loss function.
+    #hr_rand_unsharp: 1 # Example: 0.5 = 50% chance of adding unsharpening mask to HR images on the fly
+    #lr_unsharp_mask: true # add a unsharpening mask to LR images. Can be useful for training a model to reduce resize sharpness/haloing
+    #lr_rand_unsharp: 1 # Example: 0.5 = 50% chance of adding unsharpening mask to LR images on the fly
+
+    #Augmentations for classification or (maybe) inpainting networks:
+    #lr_cutout: false
+    #lr_erasing: false
+  val:
+    name: 'Set14'
+    mode: 'LRHR'
+    dataroot_HR: '/mnt/4/jzy/dataset/SR_dataset/Set14/Set14_sub'
+    dataroot_LR: '/mnt/4/jzy/dataset/SR_dataset/Set14/Set14_sub_bicLRx4'
+
+path:
+  root: '/mnt/4/SPSR/cya_sr/cya_BasicSR/release' #modify to you own root path
+  # resume_state: '../experiments/SPSR_0311/training_state/25000.state'
+  pretrain_model_G: '../experiments/pretrained_models/RRDB_PSNR_x4.pth'
+
+network_G:
+  which_model_G: 'spsr_net'
+  norm_type: null
+  mode: 'CNA'
+  nf: 64
+  nb: 23
+  in_nc: 3
+  out_nc: 3
+  gc: 32
+  group: 1
+
+network_D:
+  which_model_D: 'discriminator_vgg_128'
+  norm_type: 'batch'
+  act_type: 'leakyrelu'
+  mode: 'CNA'
+  nf: 64
+  in_nc: 3
+
+train:
+  lr_G: !!float 1e-4
+  lr_G_grad: !!float 1e-4
+  weight_decay_G: 0
+  weight_decay_G_grad: 0
+  beta1_G: 0.9
+  beta1_G_grad: 0.9
+  lr_D: !!float 1e-4
+  weight_decay_D: 0
+  beta1_D: 0.9
+  lr_scheme: 'MultiStepLR'
+  lr_steps: [50000, 100000, 200000, 300000]
+  lr_gamma: 0.5
+
+  pixel_criterion: 'l1'
+  pixel_weight: !!float 1e-2
+  feature_criterion: 'l1'
+  feature_weight: 1
+  gan_type: 'vanilla'
+  gan_weight: !!float 5e-3
+  gradient_pixel_weight: !!float 1e-2
+  gradient_gan_weight: !!float 5e-3
+  pixel_branch_criterion: 'l1'
+  pixel_branch_weight: !!float 5e-1
+  Branch_pretrain: 1
+  Branch_init_iters: 5000
+
+  manual_seed: 9
+  niter: !!float 5e5
+  val_freq: !!float 5e3
+
+logger:
+  print_freq: 100
+  save_checkpoint_freq: !!float 5e3
