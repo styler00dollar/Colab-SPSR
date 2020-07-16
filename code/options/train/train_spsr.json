@@ -8,16 +8,57 @@
   , "datasets": {
     "train": {
       "name": "DIV2K"
-      , "mode": "LRHR"
+      , "mode": "LRHROTF"
       , "dataroot_HR": "/mnt/4/jzy/dataset/SR_dataset/DIV2K800/DIV2K800_HR.lmdb"
       , "dataroot_LR": "/mnt/4/jzy/dataset/SR_dataset/DIV2K800/DIV2K800.lmdb"
       , "subset_file": null
       , "use_shuffle": true
-      , "n_workers": 16
-      , "batch_size": 30
-      , "HR_size": 128
-      , "use_flip": true
-      , "use_rot": true
+      , "n_workers": 4 // 0 to disable CPU multithreading, or an integrer representing CPU threads to use for dataloading
+      , "batch_size": 4
+      , "HR_size": 128 // patch size. Default: 128
+      
+      //Color space conversion: "color" for both LR and HR, "color_LR" for LR independently, "color_HR" for HR independently
+      //, "color": "y" // remove for no conversion (RGB) | "y" for Y in YCbCr | "gray" to convert RGB to grayscale | "RGB" to convert gray to RGB
+      //, "color_LR": "y" // remove for no conversion (RGB) | "y" for Y in YCbCr | "gray" to convert RGB to grayscale | "RGB" to convert gray to RGB
+      //, "color_HR": "y" // remove for no conversion (RGB) | "y" for Y in YCbCr | "gray" to convert RGB to grayscale | "RGB" to convert gray to RGB
+      
+      //LR and HR modifiers. Random flip LR and HR or ignore provided LRs and generate new ones on the fly with defined probability:
+      //, "rand_flip_LR_HR": false // true // flip LR and HR during training.
+      //, "flip_chance": 0.05 // Example: 0.05 = 5% chance of LR and HR flipping during training.
+      //, "aug_downscale": 0.2 // Example: 0.6 = 60% chance of generating LR on the fly, even if LR dataset exists
+      
+      //If manually configuring on the fly generation of LR: (else, it will automatically default to Matlab-like downscale algorithm (777) when/if required
+      , "lr_downscale": true // false
+      , "lr_downscale_types": ["linear", "cubic", "matlab_bicubic"] // select from: ["nearest", "linear", "cubic", "area", "lanczos4", "linear_exact", "matlab_bicubic"] // scale_algos //scaling interpolation options
+      
+      //Rotations augmentations:
+      , "use_flip": true // flip images
+      , "use_rot": true // rotate images in 90 degree angles
+      , "hr_rrot": false // rotate images in random degress between -45 and 45
+      
+      //Noise and blur augmentations:
+      , "lr_blur": false // true | false
+      , "lr_blur_types":  ["gaussian", "clean", "clean", "clean"] // select from: ["average", "box", "gaussian", "bilateral", "clean"] // #blur options #median and motion aren't working yet
+      , "lr_noise": false // true | false
+      , "lr_noise_types": ["gaussian", "clean", "clean", "clean", "clean"] // select from: ["gaussian", "JPEG", "quantize", "poisson", "dither", "s&p", "speckle", "clean"]
+      , "lr_noise2": false // true | false
+      , "lr_noise_types2": ["dither", "dither", "clean", "clean"] // select from: ["gaussian", "JPEG", "quantize", "poisson", "dither", "s&p", "speckle", "clean"]
+      , "hr_noise": false // true | false
+      , "hr_noise_types": ["gaussian", "clean", "clean", "clean", "clean"] // select from: ["gaussian", "JPEG", "quantize", "poisson", "dither", "s&p", "speckle", "clean"]
+      
+      //Color augmentations
+      //, "lr_fringes": true // true | false
+      //, "lr_fringes_chance": 0.4
+      //, "auto_levels": "HR" // "HR" | "LR" | "Both" // add auto levels to the images to expand dynamic range. Can use with (MS)-SSIM.
+      //, "rand_auto_levels": 0.7 // Example: 0.4 = 40% chance of adding auto levels to images on the fly
+      //, "hr_unsharp_mask": true // add a unsharpening mask to HR images. Can work well together with the HFEN loss function.
+      //, "hr_rand_unsharp": 1 // Example: 0.5 = 50% chance of adding unsharpening mask to HR images on the fly
+      //, "lr_unsharp_mask": true // add a unsharpening mask to LR images. Can be useful for training a model to reduce resize sharpness/haloing
+      //, "lr_rand_unsharp": 1 // Example: 0.5 = 50% chance of adding unsharpening mask to LR images on the fly
+      
+      //Augmentations for classification or (maybe) inpainting networks:
+      //, "lr_cutout": false
+      //, "lr_erasing": false
     }
     , "val": {
       "name": "Set14"
