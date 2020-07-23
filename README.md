@@ -1,4 +1,9 @@
-# SPSR
+# Colab-SPSR
+
+#### Important information
+
+- If you can't open `Colab-SPSR.ipynb` inside your Google Drive, try this [colab link](https://colab.research.google.com/github/styler00dollar/Colab-SPSR/blob/master/Colab-SPSR.ipynb) and save it to your Google Drive. The "open in Colab"-button can be missing in Google Drive, if that person never used Colab.
+- The Google Colab VM does have a maximum session length of 12 hours. Additionally there is a 30 minute timeout if you leave colab. The VM will be deleted after these timeouts.
 
 PyTorch implementation of Structure-Preserving Super Resolution with Gradient Guidance (CVPR 2020) \[[arXiv](https://arxiv.org/abs/2003.13081)\]\[[CVF](http://openaccess.thecvf.com/content_CVPR_2020/html/Ma_Structure-Preserving_Super_Resolution_With_Gradient_Guidance_CVPR_2020_paper.html)\]
 <p align="center">
